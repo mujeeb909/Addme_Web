@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+    {
+      "appID": "3L3ZFNBVLZ.com.ls.nfc.addmee",
+      "paths": ["*"]
+    }
+    ]
+  }
+}
