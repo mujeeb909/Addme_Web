@@ -382,7 +382,7 @@
                 }
 
                  // Check Last name for blank input
-                 if (!/^[a-zA-ZÄäÖöÜüß\s]+$/.test(last_name)) {
+                if (!/^[a-zA-ZÄäÖöÜüß\s]+$/.test(last_name)) {
                     $('#checkboxcontact').prop('checked', false);
                     $('#last_name_info').html('<span class="alert alert-danger">{{ $language_text['last_name_validation_alert'] }}</span>')
                     .fadeIn(150).delay(5000).fadeOut(150);
