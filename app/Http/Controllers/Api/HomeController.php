@@ -1838,7 +1838,7 @@ class HomeController extends Controller
             $query->orderBy('cp.sequence', 'ASC');
             $query->orderBy('cp.id', 'ASC');
             $profiles = $query->get();
-            // pre_print($profiles);
+            //pre_print($profiles);
             $my_recs = [];
             if (count($profiles) > 0) {
                 foreach ($profiles as $i => $profile) {
@@ -1859,10 +1859,10 @@ class HomeController extends Controller
 
                     $profile->icon = icon_url() . $profile->icon;
                     $contact_link = main_url() . '/contact-card/' . encrypt($profile->user_id);
-
+                    
                     $profile->profile_link_value = $profile->profile_link;
                     $profile->profile_link = ($profile->profile_code != 'contact-card') ? $profile->profile_link : $contact_link;
-
+                    
                     if ($profile->profile_code == 'www' || $profile->type == 'url') {
                         $is_valid_url = false;
                         if (substr($profile->profile_link, 0, 8) == "https://" || substr($profile->profile_link, 0, 7) == "http://") {
@@ -1888,13 +1888,20 @@ class HomeController extends Controller
                     $ContactCardTotal = 1;
                     if ($profile->profile_code == 'contact-card') {
                         $is_business = $profile->profile_view == 'business' ? 1 : 0;
+                        
                         $ContactCard = ContactCard::where('user_id', $profile->user_id)->where('is_business', $is_business);
+                        
                         if ($ContactCard->count() == 0) {
                             $ContactCardTotal = 0;
+                            
+                            
                         } else {
+                            
                             $ContactCard = $ContactCard->first();
+                            
                             $customer_profile_ids = isset($ContactCard->customer_profile_ids) ? $ContactCard->customer_profile_ids : 0;
                             $CustomerProfile = CustomerProfile::whereIn('id', explode(',', $customer_profile_ids));
+                            
                             if ($CustomerProfile->count() == 0) {
                                 $ContactCardTotal = 0;
                             }
@@ -1971,6 +1978,7 @@ class HomeController extends Controller
             $data['success'] = TRUE;
             $data['message'] = 'Profiles';
             $data['data'] = array('profiles' => $my_recs, 'user_profile_link' => main_url() . '/' . $Obj->username, 'user' => $Obj, 'brand_profiles' => $brand_profiles, 'brandDetail' => $profileDetails, 'settings' => $UserSettings);
+            
             return response()->json($data, 201);
         }
     }

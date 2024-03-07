@@ -930,7 +930,7 @@ class CustomerController extends Controller
             if ($User->count() != 0) {
                 continue;
             }
-
+            
             $company_name = company_friendly_name($parent_id);
             $row['username'] = unique_username($company_name . email_split($row['email']));
             $password = Str::random(8);
@@ -1167,7 +1167,7 @@ class CustomerController extends Controller
             return str_getcsv($v, ";");
         }, $records);
 
-        // pre_print($records);
+        
         if (!count($records) > 0) {
             $data['success'] = FALSE;
             $data['message'] = 'No data found!';
@@ -1177,7 +1177,7 @@ class CustomerController extends Controller
 
         // Get field names from header column
         $fields = array_map('strtolower', $records[0]);
-        // pre_print($fields);
+       
         // Remove the header column
         array_shift($records);
         $rows = [];
@@ -1194,12 +1194,12 @@ class CustomerController extends Controller
 
             // Set the field name as key
             $record = array_combine($fields, $record);
-            // pre_print($record);
+            //pre_print($record);
 
             // Get the clean data
             $rows[] = $this->clear_encoding_str($record);
         }
-        // pre_print($rows);
+        
         $token = $request->user();
         $i = 0;
         $users_list = $new_member_ids = $links = [];
@@ -1225,7 +1225,7 @@ class CustomerController extends Controller
             return $validators;
         }
 
-        // pre_print($rows);
+        
         $account_limit = $this->account_limit($parent_id, $rows);
         if ($account_limit != 1) {
             $data['success'] = FALSE;
@@ -1255,10 +1255,10 @@ class CustomerController extends Controller
             return response($data, 400);
         }
 
-        // pre_print($mapped_fields);
+       
         foreach ($rows as $idx => $row) {
 
-            // pre_print($row);
+           
             if (!isset($row['first-name'])) {
                 // return 'csv_upload_invalid_data';
                 $data['message'] = 'First name column is missing';
@@ -1301,6 +1301,8 @@ class CustomerController extends Controller
                 // return response($data, 400);
             }
 
+            
+            
             if (!isset($mapped_fields['first_name']) && !isset($mapped_fields['last_name'])) {
                 if (isset($mapped_fields['full_name'])) {
                     $full_name_idx = str_replace(' ', '-', strtolower($mapped_fields['full_name']));
@@ -1314,15 +1316,27 @@ class CustomerController extends Controller
                     }
                 }
             }
-            // pre_print($row);
+
             $street_address = $zip_post_code = $city = $state_province = $country = '';
             if (isset($mapped_fields['street_address']) && isset($row[str_replace(' ', '-', $mapped_fields['street_address'])]) && trim($row[str_replace(' ', '-', $mapped_fields['street_address'])]) != '') {
                 $street_address = $row[str_replace(' ', '-', $mapped_fields['street_address'])];
             }
-
-            if (isset($mapped_fields['zip_post_code']) && isset($row[str_replace(' ', '-', $mapped_fields['zip_post_code'])]) && trim($row[str_replace(' ', '-', $mapped_fields['zip_post_code'])]) != '') {
-                $zip_post_code = $row[str_replace(' ', '-', $mapped_fields['zip_post_code'])];
+            
+            
+            if (isset($mapped_fields['zip_post_code']) && isset($row[preg_replace('/[^\p{L}\p{N}]+/u', '-', strtolower($mapped_fields['zip_post_code']))]) && trim($row[preg_replace('/[^\p{L}\p{N}]+/u', '-', strtolower($mapped_fields['zip_post_code']))]) != '') {
+                $zip_post_code = $row[preg_replace('/[^\p{L}\p{N}]+/u', '-', strtolower($mapped_fields['zip_post_code']))];   
             }
+
+    
+
+            // if (isset($mapped_fields['zip_post_code']) && isset($row[str_replace(' ', '-', $mapped_fields['zip_post_code'])]) && trim($row[str_replace(' ', '-',$mapped_fields['zip_post_code'])]) != '') {
+            //     $zip_post_code = $row[str_replace(' ', '-',  strtolower($mapped_fields['zip_post_code']))];
+            // }
+
+            
+
+
+
             if (isset($mapped_fields['city']) && isset($row[str_replace(' ', '-', $mapped_fields['city'])]) && trim($row[str_replace(' ', '-', $mapped_fields['city'])]) != '') {
                 $city = $row[str_replace(' ', '-', $mapped_fields['city'])];
             }
@@ -1334,11 +1348,15 @@ class CustomerController extends Controller
                 $country = $row[str_replace(' ', '-', $mapped_fields['country'])];
             }
 
-            $hasAddress = false;
-            if (!isset($mapped_fields['company_address'])) {
-                $location_parts = array_filter([$street_address, $zip_post_code, $city, $state_province, $country]);
+            
 
+            $hasAddress = false;
+            
+            if (!isset($mapped_fields['company_address'])) {
+                $location_parts = array_filter([$street_address, $zip_post_code, $city, $state_province, $country]);  // blank
+                
                 if (!empty($location_parts)) {
+                    
                     $row['location'] = implode(', ', $location_parts);
                     $row['location'] = trim($row['location']);
                     $mapped_fields['company_address'] = 'Location';
@@ -1350,12 +1368,12 @@ class CustomerController extends Controller
                 $hasAddress = true;
             }
 
-            // pre_print($mapped_fields);
+            
             $User = User::where('email', $row['email']);
             if ($User->count() != 0) {
                 continue;
             }
-
+            
             $company_name = company_friendly_name($parent_id);
             $row['username'] = unique_username($company_name . email_split($row['email']));
             $password = Str::random(8);
@@ -1461,6 +1479,7 @@ class CustomerController extends Controller
                 $User->fcm_token
 
             );
+            
 
             $template = anyTemplateAssigned($User->id);
             $User = UserObjTemplateBp($User, 0, $template);
@@ -1589,9 +1608,12 @@ class CustomerController extends Controller
 
         if (count($new_member_ids) > 1) {
             $data['message'] =  $i . ': Members successfully created.';
+            
         } else {
+            // pre_print($data);
             $data['message'] =  $i . ': Member successfully created.';
-        }
+            }
+
         $data['success'] = TRUE;
         $data['data'] = array('members' => $users_list, 'links' => $links, 'settings' => $new_settings, 'template' => $template);
         return response()->json($data, 201);
@@ -3213,7 +3235,7 @@ class CustomerController extends Controller
         // fclose($fp);
 
         // $qr_code = file_get_contents(uploads_url() . 'qrcodes/' . date('Ymd') . '/' . $qr_file);
-        // echo main_url() . '/devices/activate/' . $encode_id;exit;
+        // echo main_url() . '/devices/activate/' . $encode_id;exit;2
         $svgContent = QrCode::size(300)->format('svg')->generate(main_url() . '/devices/activate/' . $encode_id);
         header('Content-Type: image/svg+xml');
         return response($svgContent, 200)->header('Content-Type', 'image/svg+xml')->header('Access-Control-Allow-Origin', '*');
@@ -3226,6 +3248,7 @@ class CustomerController extends Controller
     private function validateUserJsonData($json, $parent_id)
     {
         $users = json_decode($json);
+        
         if (empty($users)) {
             $data['success'] = FALSE;
             $data['message'] = 'Required data is missing.';
@@ -3239,15 +3262,20 @@ class CustomerController extends Controller
         $allowed = explode(',', trim($Obj->domain));
         $message = 'Required data is missing.';
         $email_list = [];
-
+        
         foreach ($users as $user) {
+            
             if (in_array($user->email, $email_list)) {
+                
                 $data['success'] = FALSE;
                 $data['message'] = 'Email (' . $user->email . ') is being duplicated';
                 $data['data'] = (object)[];
+                
                 return response($data, 400);
             } else {
+                
                 $email_list[] = $user->email;
+                
             }
 
             // $validator = Validator::make((array)$user, $validations);
@@ -3268,18 +3296,22 @@ class CustomerController extends Controller
 
             if ($validator->fails()) {
                 $messages = json_decode(json_encode($validator->messages()), true);
+                // pre_print($messages['email'][0]);
                 $i = 0;
                 foreach ($messages as $key => $val) {
                     if ($key == 'email') {
-                        $data['errors'][$i]['error'] = $message = 'The email address must be in a valid format.';
+                        if ($val[0] === 'The email has already been taken.') {
+                            $data['errors'][$i]['error'] = $message = 'Email (' . $user->email . ') is being duplicated';
+                        } else {
+                            $data['errors'][$i]['error'] = $message = 'The email address must be in a valid format.';
+                        }
                     } else {
                         $data['errors'][$i]['error'] = $message = 'Already a Business User Account';
                     }
                     $data['errors'][$i]['field'] = $key;
                     $i++;
                 }
-
-
+                
                 $data['success'] = FALSE;
                 $data['message'] = $message;
                 $data['data'] = (object)$user;
