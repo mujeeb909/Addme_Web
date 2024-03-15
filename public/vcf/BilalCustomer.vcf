@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:Bilal Customer
+NAME:Bilal Customer
+TITLE:Full Stack Developer
+ORG:ok
+URL;TYPE=My addmee Profile:http://127.0.0.1:8000/addmee-business-customer
+NOTE;CHARSET=utf-8:Added by addmee, Mar 08, 2024
+END:VCARD

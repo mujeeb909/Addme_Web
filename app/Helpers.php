@@ -248,6 +248,7 @@ function common_data()
     $data['show_action'] = 1;
     $data['show_delete'] = $data['show_add'] = 0;
     $data['show_update'] = 1;
+    $data['show_child'] = 1;
     $data['custom']        = '';
     $data['page_method'] = current_method();
     return $data;
@@ -470,6 +471,26 @@ function user_status($val = 1)
     return '<badge class="badge badge-danger">Unverified</badge>';
 }
 
+function accountType($val = 1)
+{
+    if ($val == 2) {
+        return '<badge class="badge badge-success">Parent</badge>';
+    } else if ($val == 7) {
+        return '<badge class="badge badge-success">Pet</badge>';
+    }
+    else if ($val ==8) {
+        return '<badge class="badge badge-success">Sos</badge>';
+    }
+    else if ($val == 9) {
+        return '<badge class="badge badge-success">Personal</badge>';
+    }
+    else if ($val == 10) {
+        return '<badge class="badge badge-success">Business</badge>';
+    }
+
+    return '<badge class="badge badge-success">Unverified</badge>';
+}
+
 function doc_status($val = 1)
 {
     if ($val == 1) {
@@ -605,7 +626,9 @@ function columnValue($col_value, $row, $image_url = '')
         return $row->$col_value;
     } else if ($col_value == 'user_status') {
         return user_status($row->$col_value);
-    } else if ($col_value == 'doc_status') {
+    } else if ($col_value == 'user_group_id') {
+        return accountType($row->$col_value);
+    }else if ($col_value == 'doc_status') {
         return doc_status($row->$col_value);
     } else if (strpos($col_value, 'date') > -1 && $row->$col_value != '') {
         return dmy($row->$col_value);

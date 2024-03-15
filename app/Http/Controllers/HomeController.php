@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request as HttpRequest;
 use App\Models\ContactCard;
 use App\Models\User;
+use App\Models\UserNote;
 use App\Models\BusinessInfo;
 use App\Models\BusinessUser;
 use App\Models\CustomerProfile;
+use App\Models\UserTemplate;
+use App\Models\TemplateAssignee;
 use App\Models\UniqueCode;
 use App\Models\UserSettings;
 use Illuminate\Support\Facades\Session;
@@ -64,7 +67,7 @@ class HomeController extends Controller
             $isQueryParam = true;
         } else {
             $language = $_SESSION['language'] = 'de'; //session('language');
-           //  $language =isset($_SESSION['language']) ? $_SESSION['language'] : 'de'; //session('language');
+            // $language =isset($_SESSION['language']) ? $_SESSION['language'] : 'de'; //session('language');
         }
         // pre_print($language);
 
@@ -143,16 +146,12 @@ class HomeController extends Controller
         }
 
         // user change here
-        //$template = anyTemplateAssigned($user->id);
-
+     //   $template = anyTemplateAssigned($user->id);
         $template = anyTemplateAssignedProfile($user->id);
-        
-        
         $user = UserObj($user, 0, $template);
 
         $is_business = $user->profile_view == 'business' ? 1 : 0;
         $ContactCard = ContactCard::where('user_id', $user->id)->where('is_business', $is_business)->where('customer_profile_ids', '!=', '0')->count();
-        
         $BusinessInfo = BusinessInfo::where('user_id', $user->id)->first();
 
         $BusinessUser = BusinessUser::where('user_id', $user->id);
@@ -217,6 +216,7 @@ class HomeController extends Controller
         $this->page_title = $full_name . ' | ' . ucwords(config('app.name', 'AddMee'));
         // $UserSettings = UserSettings::where('user_id', $user->id)->first();
         $UserSettings = userSettingsObj_Old($user->id, $template);
+       // pre_print($UserSettings);
         if (count($UserSettings) > 0) {
             $UserSettings = (object) $UserSettings;
             $settings = [
@@ -264,7 +264,7 @@ class HomeController extends Controller
         if ((isset($settings['show_contact']) && $settings['show_contact'] == 0) || (isset($settings['show_contact']) && $settings['show_connect'] == 0)) {
             $settings['full_width_btn'] = 1;
         }
-        // pre_print($user);
+        // pre_print($settings);
 
         $viewData = ['profiles' => $profiles, 'brand_profiles' => $brand_profiles, 'BusinessInfo' => $BusinessInfo, 'profile' => $user, 'blurOff' => $blur, 'brand_name' => $brand_name, 'brand' => $brand, 'ContactCard' => $ContactCard, 'page_title' => $this->page_title, 'language' => $language, 'settings' => $settings, 'hasRedirect' => false];
         // return $viewData; //view('profiles', $viewData);
@@ -293,7 +293,7 @@ class HomeController extends Controller
         $viewData['isIOS'] = $isIOS;
         $viewData['Android'] = $Android;
         $viewData['isQueryParam'] = $isQueryParam;
-        // pre_print($viewData);
+        //pre_print($viewData);
         return view('profiles', $viewData);
     }
 
@@ -328,11 +328,11 @@ class HomeController extends Controller
             $list['email_was_sent'] = "Zur Bestätigung wurde eine Email versendet";
             $list['company'] = "Unternehmen";
             $list['contact_pushed'] = "Kontakt wurde erfolgreich in Hubspot übertragen";
-            $list['first_name_validation_alert'] = 'Der Vorname sollte keine Zahlen oder Sonderzeichen enthalten.';
-            $list['last_name_validation_alert'] = 'Der Nachname sollte keine Zahlen oder Sonderzeichen enthalten..';
-            $list['email_validation_alert'] = 'Bitte fügen Sie eine gültige E-Mail-Adresse hinzu';
-            $list['phone_validation_alert'] = 'Bitte fügen Sie eine gültige Nummer hinzu.';
-            $list['confirmation_msg'] = "Um den Kontakt zu speichern, wählen Sie unten auf der folgenden Seite Neuen Kontakt erstellen.";
+            $list['first_name_validation_alert'] = 'Der Vorname darf keine Ziffern oder Sonderzeichen enthalten.';
+            $list['last_name_validation_alert'] = 'Der Nachname darf keine Ziffern oder Sonderzeichen enthalten.';
+            $list['email_validation_alert'] = 'Bitte trage eine gültige Email-Adresse ein';
+            $list['phone_validation_alert'] = 'Bitte trage einen gültige Telefonnummer ein';
+            $list['confirmation_msg'] = "Nachdem mit ‘OK‘ bestätigt wurde, wird eine VCF Datei heruntergeladen. Diese bitte öffnen, um die Kontaktkarte im Telefonbuch abzuspeichern.";
         } else {
             $list['save_contact'] = 'Save Contact';
             // $list['save_contact'] = 'Kontakt<br>speichern';
@@ -363,11 +363,13 @@ class HomeController extends Controller
             $list['email_was_sent'] = "An email was sent to confirm";
             $list['company'] = "Company";
             $list['contact_pushed'] = "Contact pushed into hubspot successfully";
-            $list['phone_validation_alert'] = 'Please add valid number';
-            $list['email_validation_alert'] = 'Please add valid email';
+            $list['phone_validation_alert'] = 'Please add valid phone number';
+            $list['email_validation_alert'] = 'Please add valid email address';
             $list['last_name_validation_alert'] = 'Last name should not contain numbers or special characters.';
             $list['first_name_validation_alert'] = 'First name should not contain numbers or special characters.';
-            $list['confirmation_msg'] = "To save the contact, Select Create New Contact at the bottom of following page";
+            $list['confirmation_msg'] = "After clicking on ‘OK‘, a VCF file will be downloaded. Please open this file to store the contact card in your phone book.
+            OK Cancel";
+
         }
 
         return $list;
@@ -562,6 +564,153 @@ class HomeController extends Controller
         // echo $vCard;
     }
 
+    public function contact_lead(HttpRequest $request)
+    {
+        $iPod    = stripos($_SERVER['HTTP_USER_AGENT'], "iPod");
+        $iPhone  = stripos($_SERVER['HTTP_USER_AGENT'], "iPhone");
+        $iPad    = stripos($_SERVER['HTTP_USER_AGENT'], "iPad");
+        $Android = stripos($_SERVER['HTTP_USER_AGENT'], "Android");
+        $webOS   = stripos($_SERVER['HTTP_USER_AGENT'], "webOS");
+
+        $language = 'en';
+        if (isset($_GET['language']) && trim($_GET['language']) != '') {
+            $language = trim($_GET['language']);
+        }
+        $language = !in_array($language, ['de', 'en']) ? 'en' : $language;
+
+        $isIOS = false;
+        //do something with this information
+        if ($iPod || $iPhone) {
+            //browser reported as an iPhone/iPod touch -- do something here
+            $isIOS = true;
+        } else if ($iPad) {
+            //browser reported as an iPad -- do something here
+            $isIOS = true;
+        } else if ($Android) {
+            //browser reported as an Android device -- do something here
+        } else if ($webOS) {
+            //browser reported as a webOS device -- do something here
+        }
+
+
+
+        $user = $Obj = UserNote::where('id', $request->id)->first();
+
+
+
+        $name = explode(' ', $user->name);
+        $first_name = $user->first_name; //$name[0];
+        $last_name = $user->last_name; //trim(str_replace($first_name, '', $user->name));
+
+        if ($first_name == '' && $last_name == '') {
+            $first_name = $name[0];
+            $last_name = trim(str_replace($first_name, '', $user->name));
+        }
+
+        // $first_name = str_replace('ä', 'ae', $first_name);
+        // $first_name = str_replace('ö', 'oe', $first_name);
+        // $first_name = str_replace('ü', 'ue', $first_name);
+        // $last_name = str_replace('ä', 'ae', $last_name);
+        // $last_name = str_replace('ö', 'oe', $last_name);
+        // $last_name = str_replace('ü', 'ue', $last_name);
+
+        $file_name = trim($first_name . ' ' . $last_name);
+        $file_name = str_replace('ä', 'ae', $file_name);
+        $file_name = str_replace('ö', 'oe', $file_name);
+        $file_name = str_replace('ü', 'ue', $file_name);
+        $file_name = preg_replace("/[^A-Za-z0-9.]/", '', $file_name);
+
+        $vCard  = "BEGIN:VCARD\n";
+        $vCard .= "VERSION:3.0\n";
+        if ($isIOS == true) {
+            $vCard .= "N:" . $last_name . ";" . $first_name . "\n";
+        }
+        $vCard .= "FN:" . trim($first_name . ' ' . $last_name) . "\n"; //full name
+        $vCard .= "NAME:" . trim($first_name . ' ' . $last_name) . "\n";
+
+        if ($user->job_tittle != '') {
+            $vCard .= "TITLE:" . $user->job_tittle . "\n";
+        }
+        if ($user->company != '') {
+            $vCard .= "ORG:" . $user->company . "\n";
+        }
+
+
+        if ($user->photo != '') {
+            if (file_exists(icon_dir() . $user->photo)) {
+                $getPhoto = file_get_contents(icon_dir() . $user->photo);
+                $b64vcard = base64_encode($getPhoto);
+                $b64mline = chunk_split($b64vcard, 74, "\n");
+                $b64final = preg_replace('/(.+)/', ' $1', $b64mline);
+                $photo  = $b64final;
+                $vCard .= "PHOTO;ENCODING=b;TYPE=JPEG:";
+                $vCard .= $photo . "\n";
+            }
+        }
+
+
+       // $vCard .= "TEL;INTERNET;TYPE=" . ucwords($user->phone_no) . ":" . $user->phone_no . "\n";
+       if($user->website){
+        $vCard .= "URL;TYPE=Website:" . $user->website . "\n";
+       }
+       if($user->address){
+        $vCard .= "ADR;TYPE=" . ucwords('Address') . ":" . $user->address . "\n";
+       }
+       if($user->phone_no){
+        $vCard .= "TEL;TYPE=Mobile:" . $user->phone_no . "\n";
+       }
+       if($user->mobile_no_1){
+       // $vCard .= "TEL;TYPE=Mobile2:" . $user->mobile_no_1 . "\n";
+        $vCard .= "TEL;TYPE=" . ucwords('Mobile2') . ":" . $user->mobile_no_1 . "\n";
+
+       }
+       if($user->email){
+        $vCard .= "EMAIL;INTERNET;TYPE=" . ucwords('Email') . ":" . $user->email . "\n";
+       }
+       if($user->note){
+        $vCard .= "NOTE;CHARSET=utf-8:Added by " . config("app.name", "") . ", " . date('M d, Y') . ' ' . $user->note . "\n";
+       }
+
+        $vCard .= "END:VCARD";
+
+
+        // pre_print(strtotime($user->note_visible_to) .'>='. strtotime(date('Y-m-d')));
+        // $currentDate =  Carbon::create(date('Y-m-d'));
+        // $note_visible_from = Carbon::create($user->note_visible_from);
+        // $note_visible_to = Carbon::create($user->note_visible_to);
+
+
+        // header('Content-Type: text/vcard');
+        $file_name = $file_name . '.vcf';
+        // header('Content-Description: Download vCard');
+        // header('Content-Type: text/vcard');
+        // header('Content-Disposition: attachment; filename="' . $file_name . '"');
+        // // header('Content-Length: ' . filesize($filePath));
+        // header('Content-Transfer-Encoding: binary');
+        // header('Expires: 0');
+        // header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        // header('Pragma: public');
+        // ob_clean();
+        // flush();
+        // $vCard = str_replace('ä', 'ae', $vCard);
+        // $vCard = str_replace('ö', 'oe', $vCard);
+        // $vCard = str_replace('ü', 'ue', $vCard);
+          $filePath =  root_dir() . 'vcf-lead/' . $file_name;
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        $fileHandle = fopen($filePath, 'c+');
+        fwrite($fileHandle, $vCard);
+        fclose($fileHandle);
+
+        return Response::download($filePath, $file_name, [
+            'Content-Type' => 'text/vcard',
+        ]);
+        // exit;
+        // echo $vCard;
+    }
+
     function meta($request, $Obj, $brand_name = '', $language = 'en')
     {
 
@@ -619,6 +768,8 @@ class HomeController extends Controller
 
 
         if (count($profiles) > 0) {
+
+
             $iconType = "svg_default";
             foreach ($profiles as $i => $profile) {
 
@@ -644,19 +795,36 @@ class HomeController extends Controller
                 //     $profile->icon = $profile->profile_icon_svg_colorized;
                 // }
 
-                $setting_color_link_icons = UserSettings::where('user_id', $Obj->id);
+                // $settings->color_link_icons = notEmpty($template->color_link_icons) && true_false($template->colors_custom_locked)
+                //  ? $template->color_link_icons : $settings->color_link_icons;
 
-                if ($setting_color_link_icons->count() > 0) {
-                    $setting_color_link_icon = $setting_color_link_icons->first()->color_link_icons;
+
+                $setting_color_link_icons = UserSettings::where('user_id', $Obj->id)->first();
+                if($setting_color_link_icons){
+                    $setting_color_link_icon = $setting_color_link_icons->color_link_icons;
+                }else{
+                    $setting_color_link_icon = 0;
+                }
+
+               // $template = anyTemplateAssigned($Obj->id);
+               $template = anyTemplateAssignedProfile($Obj->id);
+                $template = (object)$template;
+                if (!empty($template) && isset($template->color_link_icons)) {
+                    $setting_color_link_icon = notEmpty($template->color_link_icons) && true_false($template->colors_custom_locked) ? $template->color_link_icons : 0;
+                }
+
+              //  pre_print($setting_color_link_icon);
+
+
+                // if ($setting_color_link_icons) {
+                //     $setting_color_link_icon = $setting_color_link_icons->color_link_icons;
 
                     // Check if $setting_color_link_icon is not empty and equal to 1
                     if (!empty($setting_color_link_icon) && $setting_color_link_icon == 1) {
                         $profile->icon = $profile->profile_icon_svg_colorized;
                         $iconType = "svg_colorized";
                     }
-                    
-                    
-                }
+                // }
 
                 $profile->profile_value = $profile->profile_link;
                 $profile->profile_link = ($profile->profile_code != 'contact-card') ? $profile->profile_link : $contact_link;
@@ -700,11 +868,13 @@ class HomeController extends Controller
                 } else {
                     $profile->title_de = $profile->title;
                 }
-                
+
                 if (!in_array($profile->profile_code, is_free_profile_btn())) {
-                    
+
+
+
                     if ($has_subscription['success'] == true) {
-                        
+
                         if ($profile->cp_title != '' && $profile->cp_title !=  NULL) {
                             $profile->title = $profile->title_de = $profile->cp_title;
                         }
@@ -714,67 +884,55 @@ class HomeController extends Controller
                         // if ($profile->custom_icon_svg != '') {
                         //     $profile->icon = $profile->custom_icon_svg;
                         // }
-                        //pre_print($profile->cp_icon);
-                        
                         if (!empty($setting_color_link_icon) && $setting_color_link_icon == 1) {
-                            
+
                             if ($profile->cp_icon != '' && $profile->cp_icon != NULL) {
                                 $profile->icon = icon_url() . $profile->cp_icon ?? $profile->profile_icon_svg_default;
-                                
-                                
                             } else {
                                 $profile->icon = $profile->profile_icon_svg_colorized;
                                 $iconType = "svg_colorized";
                             }
-                            
                             if (empty($profile->cp_icon) && empty($profile->custom_icon_svg)) {
                                 $profile->icon = icon_url() . $profile->icon ?? $profile->profile_icon_svg_default;
                             }
                         } else {
-                            
                             if ($profile->cp_icon != '' && $profile->cp_icon != NULL) {
                                 $profile->icon = icon_url() . $profile->cp_icon ?? $profile->profile_icon_svg_default;
                             } else {
-                                
                                 $profile->icon = $profile->custom_icon_svg;
-                                
-                                
                             }
                             if (empty($profile->cp_icon) && empty($profile->custom_icon_svg)) {
                                 $profile->icon = $profile->icon ?? $profile->profile_icon_svg_colorized;
                             }
-                            
-                            
                         }
 
                         if (!empty($setting_color_link_icon) && $setting_color_link_icon == 1) {
-                            
                             if (empty($profile->cp_icon) && empty($profile->custom_icon_svg)) {
                                 $profile->icon = $profile->profile_icon_svg_colorized;
                             }
                             $iconType = "svg_colorized";
 
                         }else{
-                            
                             if (empty($profile->cp_icon) && empty($profile->custom_icon_svg)) {
                                 $profile->icon = $profile->profile_icon_svg_default;
                             }
-                            
                         }
-                        
-                        
-                        
-                    } 
 
+
+                    }
                 } else {
-                    
                     if ($profile->cp_title != '' && $profile->cp_title !=  NULL) {
                         $profile->title = $profile->title_de = $profile->cp_title;
                     }
 
-                    
+
+
                 }
-                
+
+
+
+
+
 
                 if ($profile->profile_view == 'business' && $profile->is_business == 0) {
                     unset($profiles[$i]);
@@ -797,9 +955,7 @@ class HomeController extends Controller
                     // }
                     unset($profiles[$i]);
                 }
-                
             }
-
         }
         // pre_print($profiles);
         $final_profiles_data = [];

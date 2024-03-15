@@ -291,20 +291,83 @@ class AdminController extends Controller
 
     public function customers($offset = 0)
     {
+
         $this->data['add_button']   = 'Add New';
         $this->data['page_title']    = 'Customers';
         $this->data['add_btn_url']  = admin_url() . '/add_customer';
         $this->data['update_btn_url'] = admin_url() . '/update_customer';
-        $this->data['column_title']    = array('Name', 'Email', 'Username', 'Gender','Company Name' ,'Status', 'Is Pro?', 'Created On');
-        $this->data['column_values'] = array('name', 'email', 'username', 'user_gender','company_name', 'user_status', 'is_pro_yes_no', 'row_datetime');
+        $this->data['child_btn_url'] = admin_url() . '/childs';
+        $this->data['column_title']    = array('Name', 'Email', 'Username', 'Gender','Company Name' ,'Type','Status', 'Is Pro?', 'Created On');
+        $this->data['column_values'] = array('name', 'email', 'username', 'user_gender','company_name','user_group_id', 'user_status', 'is_pro_yes_no', 'row_datetime');
         $this->data['delete_click'] = "deleteTableEntry('" . encrypt('users') . "','" . encrypt('id') . "','{({row-id})}');";
         $this->data['breadcrumbs']  = array('Dashboard' => admin_url(), 'Customers' => 'javascript:;');
         $this->data['name'] = $this->data['email'] = $this->data['status'] = $this->data['username'] = $this->data['company_name'] = '';
 
         //eql();
-        $query = User::query()->select('users.id', DB::raw('CONCAT(first_name," ",last_name) as name'), 'email', 'username', 'gender as user_gender','company_name', 'users.created_at as row_datetime', 'status as user_status', 'is_pro as is_pro_yes_no', 'business_users.user_role')->where('user_group_id', '=', '2');
-        $query->leftJoin('business_users', 'users.id', '=', 'business_users.user_id');
+        $query = User::query()
+        ->select('users.id', DB::raw('CONCAT(first_name, " ", last_name) as name'), 'email', 'username', 'gender as user_gender', 'company_name', 'users.created_at as row_datetime', 'status as user_status', 'is_pro as is_pro_yes_no', 'business_users.user_role', 'users.parent_id as parentId','user_group_id')
+        ->leftJoin('business_users', 'users.id', '=', 'business_users.user_id')
+        ->whereIn('users.user_group_id', [2, 7, 8, 9, 10])  // Assuming user_group_id is in the users table
+        ->where('users.parent_id', '=', 0);
+        if (isset($_GET['name']) && trim($_GET['name']) != '') {
+            $this->data['name'] = trim($_GET['name']);
+            // $query = $query->where('name', 'like', '%' . $this->data['name'] . '%');
+            $query = $query->whereRaw(DB::raw('CONCAT(first_name, " ", last_name)') . ' like "%' . $this->data['name'] . '%"');
+        }
 
+        if (isset($_GET['email']) && trim($_GET['email']) != '') {
+            $this->data['email'] = trim($_GET['email']);
+            $query = $query->where('email', 'like', '%' . $this->data['email'] . '%');
+
+        }
+
+        if (isset($_GET['username']) && trim($_GET['username']) != '') {
+            $this->data['username'] = trim($_GET['username']);
+            $query = $query->where('username', 'like', $this->data['username']);
+        }
+        if (isset($_GET['company_name']) && trim($_GET['company_name']) != '') {
+            $this->data['company_name'] = trim($_GET['company_name']);
+            $query = $query->where('company_name', 'like', '%' . $this->data['company_name'] . '%');
+        }
+
+        if (isset($_GET['status']) && trim($_GET['status']) != '') {
+            $this->data['status'] = trim($_GET['status']);
+            $query = $query->where('status', '=', $this->data['status']);
+        }
+
+        $query->orderBy('id', 'DESC');
+        $this->data['tbl_records']     = $query->paginate(per_page());
+        //pre_print($data);
+        $this->data['distinctCompanyNames'] = DB::table('users')
+        ->where('user_group_id', '=', '3')
+        ->distinct('company_name')
+        ->pluck('company_name');
+
+        $data = page_buttons('customers');
+        $this->data['ExportBpAdmins']     = 0;
+        return view('admin.records_listing', ['data' => array_merge($this->data, $data)]);
+    }
+
+    public function childs(HttpRequest $request ,$id)
+    {
+
+        $this->data['add_button']   = 'Add New';
+        $this->data['page_title']    = 'Childs';
+        $this->data['add_btn_url']  = admin_url() . '/add_customer';
+        $this->data['update_btn_url'] = admin_url() . '/update_customer';
+        $this->data['child_btn_url'] = admin_url() . '/childs';
+        $this->data['column_title']    = array('Name',  'Username', 'Gender','Company Name' ,'Type','Status', 'Is Pro?', 'Created On');
+        $this->data['column_values'] = array('name',  'username', 'user_gender','company_name','user_group_id', 'user_status', 'is_pro_yes_no', 'row_datetime');
+        $this->data['delete_click'] = "deleteTableEntry('" . encrypt('users') . "','" . encrypt('id') . "','{({row-id})}');";
+        $this->data['breadcrumbs']  = array('Dashboard' => admin_url(), 'Childs' => 'javascript:;');
+        $this->data['name'] = $this->data['email'] = $this->data['status'] = $this->data['username'] = $this->data['company_name'] = '';
+
+        //eql();
+        $query = User::query()
+        ->select('users.id', DB::raw('CONCAT(first_name, " ", last_name) as name'), 'email', 'username', 'gender as user_gender', 'company_name', 'users.created_at as row_datetime', 'status as user_status', 'is_pro as is_pro_yes_no', 'business_users.user_role', 'users.parent_id as parentId','user_group_id')
+        ->leftJoin('business_users', 'users.id', '=', 'business_users.user_id')
+        ->whereIn('users.user_group_id', [7, 8, 9, 10])  // Assuming user_group_id is in the users table
+        ->where('users.parent_id', '=', $id);
         if (isset($_GET['name']) && trim($_GET['name']) != '') {
             $this->data['name'] = trim($_GET['name']);
             // $query = $query->where('name', 'like', '%' . $this->data['name'] . '%');
@@ -2218,6 +2281,7 @@ class AdminController extends Controller
         $this->data['page_title']    = 'Business Request';
         $this->data['add_btn_url']  = admin_url() . '/add_business_request';
         $this->data['update_btn_url'] = admin_url() . '/update_business_request';
+        $this->data['child_btn_url'] = admin_url() . '/childs';
         $this->data['column_title']    = array('Name', 'Email', 'Phone No.', 'Company', 'Message', 'Date');
         $this->data['column_values'] = array('full_name', 'email', 'phone_no', 'company', 'message', 'row_datetime');
         $this->data['delete_click'] = "deleteTableEntry('" . encrypt('business_requests') . "','" . encrypt('id') . "','{({row-id})}');";

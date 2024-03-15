@@ -284,20 +284,28 @@
 
                                                 @if ($data['show_action'] == 1)
                                                     <td class="text-center">
-                                                        @if ($data['show_update'] == 1 || $data['show_delete'] == 1)
+                                                        @if ($data['show_update'] == 1 || $data['show_delete'] == 1 || $data['show_child'] == 1)
                                                             <div class="btn-group">
+                                                                @if ($data['show_child'] == 1 &&  $data['page_title'] == "Customers")
+                                                                <a class="btn btn-md btn-warning mb-1"
+                                                                    href="{{ $data['child_btn_url'] . '/' . $row->id }}">
+                                                                    <i class="fa fa-eye"></i> Child</a>
+                                                                @endif
+                                                                &nbsp;&nbsp;
                                                                 @if ($data['show_update'] == 1)
                                                                     <a class="btn btn-md btn-primary mb-1"
                                                                         href="{{ $data['update_btn_url'] . '/' . encrypt($row->id) }}">
                                                                         <i class="fa fa-pencil"></i> Update</a>
                                                                 @endif
-
+                                                                &nbsp;&nbsp;
                                                                 @if ($data['show_delete'] == 1)
                                                                     <a class="btn btn-md btn-danger mb-1"
                                                                         href="javascript:;"
                                                                         onClick="{{ str_replace('{({row-id})}', encrypt($row->id), $data['delete_click']) }}"><i
                                                                             class="fa fa-times"></i> Delete</a>
                                                                 @endif
+
+
                                                             </div>
                                                         @endif
                                                         @if ($data['custom'] != '')

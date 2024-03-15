@@ -55,6 +55,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth']], function () {
     Route::post('/permissions/{id}', [AdminController::class, 'permissions']);
 
     Route::get('/customers', [AdminController::class, 'customers'])->name('admin.customers');
+    Route::get('/childs/{id?}', [AdminController::class, 'childs'])->name('admin.childs');
     Route::get('/add_customer/{id?}', [AdminController::class, 'add_customer'])->name('add.customer');
     Route::get('/update_customer/{id?}', [AdminController::class, 'add_customer'])->name('update.customer');
     Route::post('/add_customer', [AdminController::class, 'add_customer']);
@@ -111,6 +112,7 @@ Route::get('/download_csv', [AdminController::class, 'download_csv'])->name('adm
 Route::get('/terms-conditions', [HomeController::class, 'terms'])->name('terms');
 Route::get('/privacy-policy', [HomeController::class, 'privacy'])->name('privacy');
 Route::get('/contact-card/{id}', [HomeController::class, 'contact_card']);
+Route::get('/contact-lead/{id}', [HomeController::class, 'contact_lead']);
 
 // Route::get('/addmee', [HomeController::class, 'profile'])->name('viewprofile');
 // if (isset($_SERVER['HTTP_ACCEPT']) && $_SERVER['HTTP_ACCEPT'] == 'application/json') {

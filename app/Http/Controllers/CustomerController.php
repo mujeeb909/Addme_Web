@@ -37,6 +37,7 @@ class CustomerController extends Controller
         $this->data['page_title']    = 'Business Customers';
         $this->data['add_btn_url']  = admin_url() . '/add_business_customer';
         $this->data['update_btn_url'] = admin_url() . '/update_business_customer';
+        $this->data['child_btn_url'] = admin_url() . '/childs';
         $this->data['column_title']    = array('Company', 'Business Admin', 'Email', 'Username',  'Gender', 'Status', 'Created On');
         $this->data['column_values'] = array('company_name', 'name', 'email', 'username', 'user_gender', 'user_status', 'row_datetime');
         $this->data['delete_click'] = "deleteTableEntry('" . encrypt('users') . "','" . encrypt('id') . "','{({row-id})}');";
@@ -248,6 +249,7 @@ class CustomerController extends Controller
         } else {
             $this->data['redirect']    = admin_url() . '/business_customers';
             $this->data['post_url']    = admin_url() . '/add_business_customer';
+            $this->data['child_btn_url'] = admin_url() . '/childs';
             $this->data['page_title']  = 'Add Business Customer';
             $this->data['form_fields'] = array('first_name' => 'First-Name_text', 'last_name' => 'Last-Name_text', 'email' => 'Email_text', 'username' => 'Username_text', 'company_name' => 'Company-Name_text', 'company_friendly_name' => 'Company-Friendly-Name_text', 'gender' => 'Gender_radio', 'account_limit' => 'Account-Limit_number', 'domain' => 'Domain_text', 'status' => 'Status_radio');
             //'password' => 'Password_password', 'password_confirmation' => 'Confirm-Password_password', 'user_role' => 'User-Role_radio',

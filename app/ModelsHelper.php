@@ -19,6 +19,7 @@ function anyTemplateAssigned($UserID)
 
     return [];
 }
+
 function anyTemplateAssignedProfile($UserID)
 {
     $anyTemplateAssigned = TemplateAssignee::where('user_id', $UserID)->where('customer_profile_id', 0);
@@ -307,7 +308,7 @@ function userSettingsObj_Old($UserID = 0, $template = [])
             $settings->text_color = notEmpty($template->text_color) && true_false($template->colors_custom_locked) ? $template->text_color : $settings->text_color;
             $settings->photo_border_color = notEmpty($template->border_color) && true_false($template->colors_custom_locked) ? $template->border_color : $settings->photo_border_color;
             $settings->section_color = notEmpty($template->section_color) && true_false($template->colors_custom_locked) ? $template->section_color : $settings->section_color;
-            $settings->color_link_icons = notEmpty($template->color_link_icons) && true_false($template->colors_custom_locked) ? $template->color_link_icons : $settings->color_link_icons;
+            $settings->color_link_icons = notEmpty($template->color_link_icons) && true_false($template->colors_custom_locked) ? $template->color_link_icons : 0;
             // btns
             $settings->capture_lead = $template->capture_lead != '' && true_false($template->profile_opens_locked) ? $template->capture_lead : $settings->capture_lead;
             $settings->show_contact = $template->show_contact != '' && $template->control_buttons_locked == 1 ? $template->show_contact : $settings->show_contact;

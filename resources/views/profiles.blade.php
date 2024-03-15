@@ -132,7 +132,7 @@
                             </div>
                         @endif
                         @if (isset($settings['show_contact']) && $settings['show_contact'] != 0)
-                            @if ($ContactCard > 0)
+                            {{-- @if ($ContactCard > 0) --}}
                                 <div class="{{ $settings['full_width_btn'] == 1 ? 'col-11' : 'col-6' }} lg-btns d-none">
                                     <a data-show-contact="{{ $settings['show_contact'] }}"
                                         href="{{ $blurOff == 'blurOn' ? main_url() . '/contact-card/' . encrypt($profile->id) . '?language=' . $language : '#' }}"
@@ -141,7 +141,7 @@
                                             src="{{ uploads_url() . 'img/ic_contact_card.png' }}"><span
                                             style="display: inline-block;text-align: center; margin: 0 auto; white-space: pre-line;">{!! $language_text['save_contact'] !!}</span></a>
                                 </div>
-                            @endif
+                            {{-- @endif --}}
                         @endif
                     </div>
                 </div>
@@ -170,7 +170,7 @@
                                                     <img class="shadow-- width-100" data-src="{{ $row->icon }}"
                                                         alt="{{ $row->title_de }}" src="{{ $row->icon }}">
                                                 @else
-                                                    <span class="svg-icon width-100 {{ $row->iconType }}">{!! $row->icon !!}</span>
+                                                    <span class="svg-icon width-100 {{ $row->iconType }} {{ $settings['color_link_icons'] }}">{!! $row->icon !!}</span>
                                                 @endif
                                                 {{ $row->title_de }}
                                             </a>
@@ -207,7 +207,7 @@
                                                     <img class="shadow width-100" alt="{!! $row->title_de !!}"
                                                         src="{{ $row->icon }}">
                                                 @else
-                                                    <span class="svg-icon width-100 {{ $row->iconType }} ">{!! $row->icon !!}</span>
+                                                    <span class="svg-icon width-100 {{ $row->iconType }} {{ $settings['color_link_icons'] }} ">{!! $row->icon !!}</span>
                                                 @endif
                                                 <div class="profile-title">
                                                     <h6>{{ $row->title_de }}</h6>
@@ -366,12 +366,12 @@
                     return false;
                 }
 
-                if (!/^[a-zA-ZÄäÖöÜüß\s]+$/.test(first_name)) {
-                    $('#checkboxcontact').prop('checked', false);
-                    $('#first_name_info').html('<span class="alert alert-danger">{{ $language_text['first_name_validation_alert'] }}</span>')
-                    .fadeIn(150).delay(5000).fadeOut(150);
-                    return false;
-                }
+                // if (!/^[a-zA-ZÄäÖöÜüß\s]+$/.test(first_name)) {
+                //     $('#checkboxcontact').prop('checked', false);
+                //     $('#first_name_info').html('<span class="alert alert-danger">{{ $language_text['first_name_validation_alert'] }}</span>')
+                //     .fadeIn(150).delay(5000).fadeOut(150);
+                //     return false;
+                // }
 
                 if (last_name == '') {
                     $('#checkboxcontact').prop('checked', false);
@@ -382,12 +382,12 @@
                 }
 
                  // Check Last name for blank input
-                if (!/^[a-zA-ZÄäÖöÜüß\s]+$/.test(last_name)) {
-                    $('#checkboxcontact').prop('checked', false);
-                    $('#last_name_info').html('<span class="alert alert-danger">{{ $language_text['last_name_validation_alert'] }}</span>')
-                    .fadeIn(150).delay(5000).fadeOut(150);
-                    return false;
-                }
+                //  if (!/^[a-zA-ZÄäÖöÜüß\s]+$/.test(last_name)) {
+                //     $('#checkboxcontact').prop('checked', false);
+                //     $('#last_name_info').html('<span class="alert alert-danger">{{ $language_text['last_name_validation_alert'] }}</span>')
+                //     .fadeIn(150).delay(5000).fadeOut(150);
+                //     return false;
+                // }
 
 
                 if (email == '') {
@@ -398,20 +398,13 @@
                     return false;
                 }
 
-                 //Check for Email valid Format
-                //  if (!/^\S+@\S+\.\S+$/.test(email)) {
-                //     $('#checkboxcontact').prop('checked', false);
-                //     $('#email_info').html('<span class="alert alert-danger">{{ $language_text['email_validation_alert'] }}</span>')
-                //     .fadeIn(150).delay(5000).fadeOut(150);
-                //     return false;
-                // }
-                if (!/^\S+@\S+\.(com|co|info|app|org|pk)$/.test(email)) {
+                 // Check for Email valid Format
+                 if (!/^\S+@\S+\.\S+$/.test(email)) {
                     $('#checkboxcontact').prop('checked', false);
                     $('#email_info').html('<span class="alert alert-danger">{{ $language_text['email_validation_alert'] }}</span>')
                     .fadeIn(150).delay(5000).fadeOut(150);
                     return false;
                 }
-                
 
                 if (number == '') {
                     $('#checkboxcontact').prop('checked', false);
@@ -470,7 +463,7 @@
                             $('#note').val('');
                             $('.form-body').addClass('d-none')
                             $('.form-img-body').removeClass('d-none')
-                        }
+                          }
                         //location.reload();
                         //$('#tr_'+de_utoa(id)+'').remove();
                         else {
@@ -479,12 +472,12 @@
                         }
                     },
                     error: function() {
-                        // alert("Sorry, The requested property could not be found.");
-                        $('#checkboxcontact').prop('checked', false);
-                            $('#email_info').html('<span class="alert alert-danger">abc</span>')
-                        .fadeIn(150).delay(5000).fadeOut(150);
-                        $('#msg_info').html('');
-                        return false;
+                        alert("Please add valid email address.");
+                    //    $('#checkboxcontact').prop('checked', false);
+                    //         $('#email_info').html('<span class="alert alert-danger">{{ $language_text['email_alert'] }}</span>')
+                    //     .fadeIn(150).delay(5000).fadeOut(150);
+                    //     $('#msg_info').html('');
+                    //     return false;
                     }
                 });
             }

@@ -1838,7 +1838,7 @@ class HomeController extends Controller
             $query->orderBy('cp.sequence', 'ASC');
             $query->orderBy('cp.id', 'ASC');
             $profiles = $query->get();
-            //pre_print($profiles);
+            // pre_print($profiles);
             $my_recs = [];
             if (count($profiles) > 0) {
                 foreach ($profiles as $i => $profile) {
@@ -1859,10 +1859,10 @@ class HomeController extends Controller
 
                     $profile->icon = icon_url() . $profile->icon;
                     $contact_link = main_url() . '/contact-card/' . encrypt($profile->user_id);
-                    
+
                     $profile->profile_link_value = $profile->profile_link;
                     $profile->profile_link = ($profile->profile_code != 'contact-card') ? $profile->profile_link : $contact_link;
-                    
+
                     if ($profile->profile_code == 'www' || $profile->type == 'url') {
                         $is_valid_url = false;
                         if (substr($profile->profile_link, 0, 8) == "https://" || substr($profile->profile_link, 0, 7) == "http://") {
@@ -1888,20 +1888,13 @@ class HomeController extends Controller
                     $ContactCardTotal = 1;
                     if ($profile->profile_code == 'contact-card') {
                         $is_business = $profile->profile_view == 'business' ? 1 : 0;
-                        
                         $ContactCard = ContactCard::where('user_id', $profile->user_id)->where('is_business', $is_business);
-                        
                         if ($ContactCard->count() == 0) {
                             $ContactCardTotal = 0;
-                            
-                            
                         } else {
-                            
                             $ContactCard = $ContactCard->first();
-                            
                             $customer_profile_ids = isset($ContactCard->customer_profile_ids) ? $ContactCard->customer_profile_ids : 0;
                             $CustomerProfile = CustomerProfile::whereIn('id', explode(',', $customer_profile_ids));
-                            
                             if ($CustomerProfile->count() == 0) {
                                 $ContactCardTotal = 0;
                             }
@@ -1978,7 +1971,6 @@ class HomeController extends Controller
             $data['success'] = TRUE;
             $data['message'] = 'Profiles';
             $data['data'] = array('profiles' => $my_recs, 'user_profile_link' => main_url() . '/' . $Obj->username, 'user' => $Obj, 'brand_profiles' => $brand_profiles, 'brandDetail' => $profileDetails, 'settings' => $UserSettings);
-            
             return response()->json($data, 201);
         }
     }
@@ -2334,8 +2326,15 @@ class HomeController extends Controller
         if (!empty($UserNotes)) {
             foreach ($UserNotes as $i => $UserNote) {
                 $UserNotes[$i]->photo = $UserNote->photo != NULL ? image_url($UserNote->photo) : '';
+                $contact_link = main_url() . '/contact-lead/' . $UserNote->id;
+                $UserNotes[$i]->contact_link = $contact_link; // Save contact link to the UserNote object
             }
         }
+
+
+
+
+
         $data['success'] = TRUE;
         $data['message'] = 'User Notes';
         $data['data'] = array('user_notes' => $UserNotes);
@@ -2425,13 +2424,9 @@ class HomeController extends Controller
         $validations['first_name'] = 'required';
         $validations['last_name'] = 'required';
         $validations['email'] = 'required|string|email';
-        //$validations['email'] = ['required', 'string', 'email'];
-        
-        
-
         // $validations['phone_no'] = 'required';
         $validator = Validator::make($request->all(), $validations);
-        
+
         if ($validator->fails()) {
             $messages = json_decode(json_encode($validator->messages()), true);
             $i = 0;
@@ -2446,7 +2441,6 @@ class HomeController extends Controller
             $data['data'] = (object)[];
             return response($data, 400);
         }
-
         // start hubspot api
 
         $findBusinessUser = BusinessUser::where('user_id', $request->user_id)->first();
@@ -2682,6 +2676,9 @@ class HomeController extends Controller
                 ]);
 
 
+
+
+
                 // Handle success response or perform additional actions if needed
                 $data['success'] = TRUE;
                 $data['hubspotContactMessage'] = 'Contact pushed into HubSpot successfully';
@@ -2689,12 +2686,17 @@ class HomeController extends Controller
             }
         }
         //end hubspot api
-        $Obj = new UserNote;
+
+        $Obj = UserNote::where('id', $request->id)->first();
+        if (!$Obj) {
+            $Obj = new UserNote;
+        }
         $Obj->first_name = $request->first_name;
         $Obj->last_name = $request->last_name;
         $Obj->name = $request->first_name . ' ' . $request->last_name;
         $Obj->email = $request->email;
         $Obj->phone_no = $request->phone_no;
+        $Obj->mobile_no_1 = $request->mobile_no_1;
         $Obj->note = $request->note;
         $Obj->website = $request->has('website') ? $request->website : NULL;
         $Obj->job_tittle = $request->has('job_tittle') ? $request->job_tittle : NULL;
@@ -3298,6 +3300,8 @@ class HomeController extends Controller
         $my_recs = [];
         if (count($profiles) > 0) {
 
+
+            //  pre_print($profiles);
             $ContactCard = ContactCard::where('user_id', $token->id)->where('is_business', 0)->first();
             $customer_profile_ids = isset($ContactCard->customer_profile_ids) ? $ContactCard->customer_profile_ids : 0;
             $BusinessContactCard = ContactCard::where('user_id', $token->id)->where('is_business', 1)->first();
@@ -3322,10 +3326,16 @@ class HomeController extends Controller
                         $profile->icon_svg = $profile->profile_icon_svg_default;
                     }
                 }
+
+
                 if (isset($profile->icon_svg) && $profile->icon_svg != '') {
                     // $profile->icon_svg = $profile->profile_icon_svg_default;
                     $profile->icon = '';
                 }
+
+
+
+
 
                 $profile->profile_link_value = $profile->profile_link;
                 $profile->profile_link = ($profile->profile_code != 'contact-card') ? $profile->profile_link : $contact_link;
@@ -3341,6 +3351,8 @@ class HomeController extends Controller
                     }
                 }
 
+
+
                 $profile->profile_link = ($profile->profile_code != 'file') ? $profile->base_url . $profile->profile_link : file_url() . $profile->file_image;
 
                 if ($has_subscription['success'] == true) {
@@ -3349,6 +3361,7 @@ class HomeController extends Controller
                     }
 
                     $profile->icon = ($profile->cp_icon != '' && $profile->cp_icon != NULL) ? icon_url() . $profile->cp_icon : $profile->icon;
+
                     if (isset($profile->icon_svg) && $profile->icon_svg != '') {
                         //$profile->icon = '';
                     }
@@ -3357,10 +3370,21 @@ class HomeController extends Controller
                         $profile->title = $profile->title_de = $profile->cp_title;
                     }
 
+
+
                     $profile->custom_icon_svg = null;
                 }
 
-                unset($profile->cp_icon, $profile->cp_title, $profile->file_image, $profile->link_type_id,);
+
+
+
+
+
+
+                unset($profile->cp_title, $profile->file_image, $profile->link_type_id,);
+
+
+
 
                 $profile->added_to_contact_card = 'no';
                 if ($profile->is_business == 0) {
@@ -3407,7 +3431,9 @@ class HomeController extends Controller
                     $profile->is_unique = 0;
                 }
 
-                $profile->icon_url = $profile->icon;
+                $profile->icon_url = $profile->cp_icon ? icon_url() . $profile->cp_icon : "";
+
+
                 // if ($profile->icon_url != '' && isset($profile->profile_icon_svg_default)) {
 
                     if ((!property_exists($profile, 'icon_svg') || $profile->icon_svg == '') && isset($profile->profile_icon_svg_default)) {
@@ -3421,6 +3447,8 @@ class HomeController extends Controller
                     unset($profile->profile_icon_svg_default);
                 }
                 unset(
+
+                    $profile->cp_icon,
                     $profile->file_image,
                     $profile->status,
                     $profile->created_by,
@@ -3428,6 +3456,7 @@ class HomeController extends Controller
                     $profile->updated_by,
                     $profile->is_pro
                 );
+
 
                 if ($ContactCardTotal != 0) {
                     $my_recs[] = $profile;
