@@ -19,6 +19,17 @@ function anyTemplateAssigned($UserID)
 
     return [];
 }
+function anyTemplateAssignedProfile($UserID)
+{
+    $anyTemplateAssigned = TemplateAssignee::where('user_id', $UserID)->where('customer_profile_id', 0);
+    if ($anyTemplateAssigned->count() > 0) {
+        $templateAssigned = $anyTemplateAssigned->first();
+        $template = UserTemplate::where('id', $templateAssigned->user_template_id)->where('colors_custom_locked', 1)->first();
+        return json_decode(json_encode($template), true);
+    }
+
+    return [];
+}
 
 // function TemplateAssigned($UserID)
 // {

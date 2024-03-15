@@ -398,13 +398,20 @@
                     return false;
                 }
 
-                 // Check for Email valid Format
-                 if (!/^\S+@\S+\.\S+$/.test(email)) {
+                 //Check for Email valid Format
+                //  if (!/^\S+@\S+\.\S+$/.test(email)) {
+                //     $('#checkboxcontact').prop('checked', false);
+                //     $('#email_info').html('<span class="alert alert-danger">{{ $language_text['email_validation_alert'] }}</span>')
+                //     .fadeIn(150).delay(5000).fadeOut(150);
+                //     return false;
+                // }
+                if (!/^\S+@\S+\.(com|co|info|app|org|pk)$/.test(email)) {
                     $('#checkboxcontact').prop('checked', false);
                     $('#email_info').html('<span class="alert alert-danger">{{ $language_text['email_validation_alert'] }}</span>')
                     .fadeIn(150).delay(5000).fadeOut(150);
                     return false;
                 }
+                
 
                 if (number == '') {
                     $('#checkboxcontact').prop('checked', false);
@@ -463,7 +470,7 @@
                             $('#note').val('');
                             $('.form-body').addClass('d-none')
                             $('.form-img-body').removeClass('d-none')
-                          }
+                        }
                         //location.reload();
                         //$('#tr_'+de_utoa(id)+'').remove();
                         else {
@@ -472,7 +479,12 @@
                         }
                     },
                     error: function() {
-                        alert("Sorry, The requested property could not be found.");
+                        // alert("Sorry, The requested property could not be found.");
+                        $('#checkboxcontact').prop('checked', false);
+                            $('#email_info').html('<span class="alert alert-danger">abc</span>')
+                        .fadeIn(150).delay(5000).fadeOut(150);
+                        $('#msg_info').html('');
+                        return false;
                     }
                 });
             }

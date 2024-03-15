@@ -2425,9 +2425,13 @@ class HomeController extends Controller
         $validations['first_name'] = 'required';
         $validations['last_name'] = 'required';
         $validations['email'] = 'required|string|email';
+        //$validations['email'] = ['required', 'string', 'email'];
+        
+        
+
         // $validations['phone_no'] = 'required';
         $validator = Validator::make($request->all(), $validations);
-
+        
         if ($validator->fails()) {
             $messages = json_decode(json_encode($validator->messages()), true);
             $i = 0;
@@ -2442,6 +2446,7 @@ class HomeController extends Controller
             $data['data'] = (object)[];
             return response($data, 400);
         }
+
         // start hubspot api
 
         $findBusinessUser = BusinessUser::where('user_id', $request->user_id)->first();
@@ -2675,9 +2680,6 @@ class HomeController extends Controller
                     ],
                     'json' => $newNoteData,
                 ]);
-
-
-
 
 
                 // Handle success response or perform additional actions if needed

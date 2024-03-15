@@ -95,7 +95,7 @@ class CustomerController extends Controller
                 $User->allow_data_usage = 0;
                 $User->device_type = 0;
                 $User->device_id = 0;
-                $User->vcode = rand(111111, 999999);;
+                $User->vcode = rand(111111, 999999);
                 $User->vcode_expiry = date('Y-m-d H:i:s', strtotime('+1 day'));
                 $User->created_at = Carbon::now();
                 $User->created_by = $token->id;
@@ -1154,15 +1154,14 @@ class CustomerController extends Controller
         // $records = array_map(function ($v) {
         //     return str_getcsv($v, ";");
         // }, $records);
-        $lines = file($path);
-        // Detect encoding of the first line
+        $lines = file($path); // Detect encoding of the first line
         $encoding = detect_encoding($lines[0]);
-
+        
         // Convert each line to UTF-8
         $records = array_map(function ($line) use ($encoding) {
             return mb_convert_encoding($line, 'UTF-8', $encoding);
         }, $lines);
-
+       
         $records = array_map(function ($v) {
             return str_getcsv($v, ";");
         }, $records);
@@ -1177,7 +1176,7 @@ class CustomerController extends Controller
 
         // Get field names from header column
         $fields = array_map('strtolower', $records[0]);
-       
+    
         // Remove the header column
         array_shift($records);
         $rows = [];
@@ -1336,13 +1335,22 @@ class CustomerController extends Controller
             
 
 
-
+                
             if (isset($mapped_fields['city']) && isset($row[str_replace(' ', '-', $mapped_fields['city'])]) && trim($row[str_replace(' ', '-', $mapped_fields['city'])]) != '') {
                 $city = $row[str_replace(' ', '-', $mapped_fields['city'])];
             }
+
+            // if (isset($mapped_fields['city']) && trim($row['city']) != '') {
+            //     $city = $row['city'];
+            // }   
+            
             if (isset($mapped_fields['state_province']) && isset($row[str_replace(' ', '-', $mapped_fields['state_province'])]) && trim($row[str_replace(' ', '-', $mapped_fields['state_province'])]) != '') {
                 $state_province = $row[str_replace(' ', '-', $mapped_fields['state_province'])];
             }
+            
+
+            
+            
 
             if (isset($mapped_fields['country']) && isset($row[str_replace(' ', '-', $mapped_fields['country'])]) && trim($row[str_replace(' ', '-', $mapped_fields['country'])]) != '') {
                 $country = $row[str_replace(' ', '-', $mapped_fields['country'])];
@@ -1350,23 +1358,24 @@ class CustomerController extends Controller
 
             
 
-            $hasAddress = false;
+           $hasAddress = 0;
             
             if (!isset($mapped_fields['company_address'])) {
-                $location_parts = array_filter([$street_address, $zip_post_code, $city, $state_province, $country]);  // blank
+                $location_parts = array_filter([$street_address, $zip_post_code, $city, $state_province, $country]);  
                 
                 if (!empty($location_parts)) {
-                    
                     $row['location'] = implode(', ', $location_parts);
                     $row['location'] = trim($row['location']);
                     $mapped_fields['company_address'] = 'Location';
                     if (trim($row['location']) != '') {
-                        $hasAddress = true;
+                        $hasAddress = 1;
                     }
                 }
             } else {
-                $hasAddress = true;
+                
+                $hasAddress = 1;
             }
+            // pre_print($hasAddress);
 
             
             $User = User::where('email', $row['email']);
@@ -1490,7 +1499,7 @@ class CustomerController extends Controller
             $profiles = ['instagram' => 'instagram', 'phone-number' => 'call', 'phone-number' => 'text', 'website' => 'www', 'location' => 'address', 'linkedin' => 'linkedin', 'phone-number-title-office' => 'business_call', 'phone-number-office' => 'business_call', 'phone-number-title-mobile' => 'call', 'phone-number-mobile' => 'call'];
             foreach ($profiles as $key => $val) {
                 if (isset($row[$key]) && trim($row[$key]) != '') {
-                    if ($key == 'location' && $hasAddress == false) {
+                    if ($key == 'location' && $hasAddress == 0) {
                         continue;
                     }
                     $Obj = new CustomerProfile();

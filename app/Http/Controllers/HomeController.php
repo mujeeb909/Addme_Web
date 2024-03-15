@@ -143,11 +143,16 @@ class HomeController extends Controller
         }
 
         // user change here
-        $template = anyTemplateAssigned($user->id);
+        //$template = anyTemplateAssigned($user->id);
+
+        $template = anyTemplateAssignedProfile($user->id);
+        
+        
         $user = UserObj($user, 0, $template);
 
         $is_business = $user->profile_view == 'business' ? 1 : 0;
         $ContactCard = ContactCard::where('user_id', $user->id)->where('is_business', $is_business)->where('customer_profile_ids', '!=', '0')->count();
+        
         $BusinessInfo = BusinessInfo::where('user_id', $user->id)->first();
 
         $BusinessUser = BusinessUser::where('user_id', $user->id);
@@ -649,6 +654,8 @@ class HomeController extends Controller
                         $profile->icon = $profile->profile_icon_svg_colorized;
                         $iconType = "svg_colorized";
                     }
+                    
+                    
                 }
 
                 $profile->profile_value = $profile->profile_link;
@@ -693,10 +700,11 @@ class HomeController extends Controller
                 } else {
                     $profile->title_de = $profile->title;
                 }
-
+                
                 if (!in_array($profile->profile_code, is_free_profile_btn())) {
-
+                    
                     if ($has_subscription['success'] == true) {
+                        
                         if ($profile->cp_title != '' && $profile->cp_title !=  NULL) {
                             $profile->title = $profile->title_de = $profile->cp_title;
                         }
@@ -706,46 +714,67 @@ class HomeController extends Controller
                         // if ($profile->custom_icon_svg != '') {
                         //     $profile->icon = $profile->custom_icon_svg;
                         // }
+                        //pre_print($profile->cp_icon);
+                        
                         if (!empty($setting_color_link_icon) && $setting_color_link_icon == 1) {
+                            
                             if ($profile->cp_icon != '' && $profile->cp_icon != NULL) {
                                 $profile->icon = icon_url() . $profile->cp_icon ?? $profile->profile_icon_svg_default;
+                                
+                                
                             } else {
                                 $profile->icon = $profile->profile_icon_svg_colorized;
                                 $iconType = "svg_colorized";
                             }
+                            
                             if (empty($profile->cp_icon) && empty($profile->custom_icon_svg)) {
                                 $profile->icon = icon_url() . $profile->icon ?? $profile->profile_icon_svg_default;
                             }
                         } else {
+                            
                             if ($profile->cp_icon != '' && $profile->cp_icon != NULL) {
                                 $profile->icon = icon_url() . $profile->cp_icon ?? $profile->profile_icon_svg_default;
                             } else {
+                                
                                 $profile->icon = $profile->custom_icon_svg;
+                                
+                                
                             }
                             if (empty($profile->cp_icon) && empty($profile->custom_icon_svg)) {
                                 $profile->icon = $profile->icon ?? $profile->profile_icon_svg_colorized;
                             }
+                            
+                            
                         }
 
                         if (!empty($setting_color_link_icon) && $setting_color_link_icon == 1) {
+                            
                             if (empty($profile->cp_icon) && empty($profile->custom_icon_svg)) {
                                 $profile->icon = $profile->profile_icon_svg_colorized;
                             }
                             $iconType = "svg_colorized";
 
                         }else{
+                            
                             if (empty($profile->cp_icon) && empty($profile->custom_icon_svg)) {
                                 $profile->icon = $profile->profile_icon_svg_default;
                             }
+                            
                         }
+                        
+                        
+                        
+                    } 
 
-
-                    }
                 } else {
+                    
                     if ($profile->cp_title != '' && $profile->cp_title !=  NULL) {
                         $profile->title = $profile->title_de = $profile->cp_title;
                     }
+
+                    
                 }
+                
 
                 if ($profile->profile_view == 'business' && $profile->is_business == 0) {
                     unset($profiles[$i]);
@@ -768,7 +797,9 @@ class HomeController extends Controller
                     // }
                     unset($profiles[$i]);
                 }
+                
             }
+
         }
         // pre_print($profiles);
         $final_profiles_data = [];

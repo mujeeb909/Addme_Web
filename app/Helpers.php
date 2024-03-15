@@ -880,7 +880,7 @@ function chk_subscription($token, $customer_profile_id = 0)
         return $data;
     }
 
-    if ($token->subscription_expires_on != NULL && strtotime($token->subscription_expires_on) <= strtotime(date('Y-m-d H:i:s'))) {
+    if ($token->subscription_expires_on != NULL && strtotime($token->subscription_expires_on) <= strtotime(date('Y-m-d H:i:s')) && $token->is_pro == is_grace_user()) {
 
         $User = User::where('id', $token->id)->whereIn('is_pro', [is_pro_user(), is_grace_user()]);
         if ($User->count() > 0) {
